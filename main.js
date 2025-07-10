@@ -9,37 +9,19 @@ class Cell {
   }
 }
 
-const SIZE = 6
+function updateGame(grid) {
+  if (generationNum == 0) {
+    displayGrid(grid);
+    generationNum++;
+    return;
+  }
 
-const gameGrid = createGrid(SIZE);
-fillGridWithCells(gameGrid);
-gameGrid[3][3].alive = true;
-gameGrid[2][2].alive = true;
-gameGrid[2][3].alive = true;
-gameGrid[2][4].alive = true;
+  console.log("Generation: " + generationNum);
+  updateGrid(grid);
+  displayGrid(grid);
 
-console.log("Gen: 0");
-displayGrid(gameGrid);
-
-console.log("Gen: 1");
-updateGrid(gameGrid);
-displayGrid(gameGrid);
-
-console.log("Gen: 2");
-updateGrid(gameGrid);
-displayGrid(gameGrid);
-
-console.log("Gen: 3");
-updateGrid(gameGrid);
-displayGrid(gameGrid);
-
-console.log("Gen: 4");
-updateGrid(gameGrid);
-displayGrid(gameGrid);
-
-console.log("Gen: 5");
-updateGrid(gameGrid);
-displayGrid(gameGrid);
+  generationNum++;
+}
 
 function updateGrid(grid) {
   const numAliveNeighboursGrid = getNumAliveNeighboursGrid(grid);
@@ -130,3 +112,15 @@ function displayGrid(grid) {
   }
   console.log();
 }
+
+const SIZE = 25;
+let generationNum = 0;
+
+const gameGrid = createGrid(SIZE);
+fillGridWithCells(gameGrid);
+gameGrid[7][7].alive = true;
+gameGrid[6][6].alive = true;
+gameGrid[6][7].alive = true;
+gameGrid[6][8].alive = true;
+
+setInterval(function() { updateGame(gameGrid) }, 500);
