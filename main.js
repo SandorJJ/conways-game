@@ -9,39 +9,115 @@ class Cell {
   }
 }
 
-const cells = createCells(3);
-displayCells(cells);
+const SIZE = 6
 
-cells[1][1].alive = true;
-cells[0][0].alive = true;
-cells[0][1].alive = true;
-cells[0][2].alive = true;
-displayCells(cells);
+const gameGrid = createGrid(SIZE);
+fillGridWithCells(gameGrid);
+gameGrid[3][3].alive = true;
+gameGrid[2][2].alive = true;
+gameGrid[2][3].alive = true;
+gameGrid[2][4].alive = true;
 
-updateCells(cells);
-displayCells(cells);
+console.log("Gen: 0");
+displayGrid(gameGrid);
 
+console.log("Gen: 1");
+updateGrid(gameGrid);
+displayGrid(gameGrid);
 
-function createCells(size) {
-  const cells = new Array(size);
-  for (let i = 0; i < cells.length; i++) {
-    cells[i] = new Array(size);
+console.log("Gen: 2");
+updateGrid(gameGrid);
+displayGrid(gameGrid);
+
+console.log("Gen: 3");
+updateGrid(gameGrid);
+displayGrid(gameGrid);
+
+console.log("Gen: 4");
+updateGrid(gameGrid);
+displayGrid(gameGrid);
+
+console.log("Gen: 5");
+updateGrid(gameGrid);
+displayGrid(gameGrid);
+
+function updateGrid(grid) {
+  const numAliveNeighboursGrid = getNumAliveNeighboursGrid(grid);
+
+  for (let i = 0; i < grid.length; i++) {
+    for (let j = 0; j < grid.length; j++) {
+      updateCellState(grid[i][j], numAliveNeighboursGrid[i][j]);
+    }
   }
+}
 
-  for (let i = 0; i < cells.length; i++) {
-    for (let j = 0; j < cells.length; j++) {
-      cells[i][j] = new Cell(i, j);
+function updateCellState(cell, numAliveNeighbours) {
+  if (cell.alive) {
+    if (numAliveNeighbours < 2 || numAliveNeighbours > 3) {
+      cell.alive = false;
+    }
+  } else {
+    if (numAliveNeighbours == 3) {
+      cell.alive = true;
+    }
+  }
+}
+
+function getNumAliveNeighboursGrid(grid) {
+  const numAliveNeighboursGrid = createGrid(grid.length);
+  for (let i = 0; i < numAliveNeighboursGrid.length; i++) {
+    for (let j = 0; j < numAliveNeighboursGrid.length; j++) {
+      numAliveNeighboursGrid[i][j] = getNumAliveNeighbours(grid, grid[i][j])
     }
   }
 
-  return cells;
+  return numAliveNeighboursGrid;
 }
 
-function displayCells(cells) {
-  for (let i = 0; i < cells.length; i++) {
+function getNumAliveNeighbours(grid, cell) {
+  let numAliveNeighbours = 0;
+  for (let i = cell.xPos - 1; i < cell.xPos + 2; i++) {
+    for (let j = cell.yPos - 1; j < cell.yPos + 2; j++) {
+      if (i < 0 || i >= grid.length || j < 0 || j >= grid.length) {
+        continue;
+      }
+
+      if (i == cell.xPos && j == cell.yPos) {
+        continue;
+      }
+
+      if (grid[i][j].alive) {
+        numAliveNeighbours++;
+      }
+    }
+  }
+
+  return numAliveNeighbours;
+}
+
+function createGrid(size) {
+  const grid = new Array(size);
+  for (let i = 0; i < size; i++) {
+    grid[i] = new Array(size);
+  }
+
+  return grid;
+}
+
+function fillGridWithCells(grid) {
+  for (let i = 0; i < grid.length; i++) {
+    grid[i] = new Array(grid.length);
+    for (let j = 0; j < grid.length; j++) {
+      grid[i][j] = new Cell(i, j);
+    }
+  }
+}
+
+function displayGrid(grid) {
+  for (let i = 0; i < grid.length; i++) {
     line = "";
-    for (let j = 0; j < cells.length; j++) {
-      if (cells[i][j].alive) {
+    for (let j = 0; j < grid.length; j++) {
+      if (grid[i][j].alive) {
         line += "[#]";
       } else {
         line += "[ ]";
@@ -53,54 +129,4 @@ function displayCells(cells) {
     console.log(line);
   }
   console.log();
-}
-
-function updateCells(cells) {
-  const previousGeneration = createCells(cells.length);
-  for (let i = 0; i < cells.length; i++) {
-    for (let j = 0; j < cells.length; j++) {
-      if (cells[i][j].alive) {
-        previousGeneration[i][j].alive = true;
-      }
-    }
-  }
-
-  for (let i = 0; i < previousGeneration.length; i++) {
-    for (let j = 0; j < previousGeneration.length; j++) {
-      updateCellState(cells[i][j], previousGeneration[i][j]);
-    }
-  }
-}
-
-function updateCellState(cellToUpdate, cellPreviousState) {
-  const numAliveNeighbours = checkNeighbours(cellPreviousState);
-
-  if (cellPreviousState.alive && (numAliveNeighbours < 2 || numAliveNeighbours > 3)) {
-    cellToUpdate.alive = false;
-  }
-
-  if (!cellPreviousState.alive && numAliveNeighbours == 3) {
-    cellToUpdate.alive = true;
-  }
-}
-
-function checkNeighbours(cell) {
-  let numAliveNeighbours = 0;
-  for (let i = cell.xPos - 1; i < cell.xPos + 2; i++) {
-    for (let j = cell.yPos - 1; j < cell.yPos + 2; j++) {
-      if (i < 0 || i >= cells.length || j < 0 || j >= cells.length) {
-        continue;
-      }
-
-      if (i == cell.xPos && j == cell.yPos) {
-        continue;
-      }
-
-      if (cells[i][j].alive) {
-        numAliveNeighbours++;
-      }
-    }
-  }
-
-  return numAliveNeighbours;
 }
