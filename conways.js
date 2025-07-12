@@ -1,124 +1,91 @@
-function updateGame(grid) {
-  if (generationNum == 0) {
-    displayGridToConsole(grid);
-    generationNum++;
-    return;
-  }
+const CELL_PIXEL_AMOUNT = 24;
 
-  console.log("Generation: " + generationNum);
-  updateGrid(grid);
-  displayGrid(grid);
+let playing = false;
+let updateIntervalId = 0;
 
-  generationNum++;
-}
+let generationNum = 0;
 
-function updateGrid(grid) {
-  const numAliveNeighboursGrid = getNumAliveNeighboursGrid(grid);
-
-  for (let i = 0; i < grid.length; i++) {
-    for (let j = 0; j < grid.length; j++) {
-      updateCellState(grid[i][j], numAliveNeighboursGrid[i][j]);
-    }
-  }
-}
-
-function updateCellState(cell, numAliveNeighbours) {
-  if (cell.alive) {
-    if (numAliveNeighbours < 2 || numAliveNeighbours > 3) {
-      cell.alive = false;
-    }
+function start() {
+  if (!playing) {
+    playing = true;
+    document.getElementById("startStop").innerText = "Stop";
+    updateIntervalId = setInterval(update, 250);
   } else {
-    if (numAliveNeighbours == 3) {
-      cell.alive = true;
+    playing = false;
+    document.getElementById("startStop").innerText = "Start";
+    clearInterval(updateIntervalId);
+  }
+}
+
+function update() {
+  const numAliveNeighboursGrid = getNumAliveNeighboursGrid();
+
+  for (let i = 0; i < document.getElementById("width").value; i++) {
+    for (let j = 0; j < document.getElementById("height").value; j++) {
+      updateCellState(j, i, numAliveNeighboursGrid[j][i]);
     }
   }
 }
 
-function getNumAliveNeighboursGrid(grid) {
-  const numAliveNeighboursGrid = createGrid(grid.length);
+function getNumAliveNeighboursGrid() {
+  const numAliveNeighboursGrid = create2DArray(document.getElementById("width").value, document.getElementById("height").value);
+
   for (let i = 0; i < numAliveNeighboursGrid.length; i++) {
-    for (let j = 0; j < numAliveNeighboursGrid.length; j++) {
-      numAliveNeighboursGrid[i][j] = grid[i][j].getNumAliveNeighbours(grid);
+    for (let j = 0; j < numAliveNeighboursGrid[i].length; j++) {
+      numAliveNeighboursGrid[i][j] = getNumAliveNeighbours(j, i);
     }
   }
 
   return numAliveNeighboursGrid;
 }
 
-function createGrid(size) {
-  const grid = new Array(size);
-  for (let i = 0; i < size; i++) {
-    grid[i] = new Array(size);
+function create2DArray(x, y) {
+  const array = new Array(parseInt(y));
+  for (let i = 0; i < array.length; i++) {
+    array[i] = new Array(parseInt(x));
   }
 
-  return grid;
+  return array;
 }
 
-function fillGridWithCells(grid) {
-  for (let i = 0; i < grid.length; i++) {
-    grid[i] = new Array(grid.length);
-    for (let j = 0; j < grid.length; j++) {
-      grid[i][j] = new Cell(i, j);
-    }
+function updateCellState(x, y, numAliveNeighbours) {
+  const cell = document.getElementById("grid").rows[x].cells[y];
+
+  if (cell.id === "alive" && (numAliveNeighbours < 2 || numAliveNeighbours > 3)) {
+    cell.id = "";
+  } else if (cell.id === "" && numAliveNeighbours === 3) {
+    cell.id = "alive";
   }
 }
 
-function displayGridToConsole(grid) {
-  for (let i = 0; i < grid.length; i++) {
-    line = "";
-    for (let j = 0; j < grid.length; j++) {
-      if (grid[i][j].alive) {
-        line += "[#]";
-      } else {
-        line += "[ ]";
+function getNumAliveNeighbours(x, y) {
+  let numAliveNeighbours = 0;
+  for (let i = x - 1; i <= x + 1; i++) {
+    for (let j = y - 1; j <= y + 1; j++) {
+      if (i < 0 || j < 0 || i > document.getElementById("width").value - 1 || j > document.getElementById("height").value - 1) continue;
+
+      if (i === x && j === y) continue;
+
+      if (document.getElementById("grid").rows[j].cells[i].id === "alive") {
+        numAliveNeighbours++;
       }
-
-      line += " ";
     }
-
-    console.log(line);
   }
-  console.log();
+
+  return numAliveNeighbours;
 }
 
-const SIZE = 25;
-let generationNum = 0;
-
-const gameGrid = createGrid(SIZE);
-fillGridWithCells(gameGrid);
-gameGrid[7][7].alive = true;
-gameGrid[6][6].alive = true;
-gameGrid[6][7].alive = true;
-gameGrid[6][8].alive = true;
-
-//setInterval(function() { updateGame(gameGrid) }, 500);
-//
-const CELL_PIXEL_AMOUNT = 24;
-
-function createGridTable() {
+function createGrid() {
   if (document.getElementById("grid")) {
     document.getElementById("grid").remove();
   }
 
+  const table = document.createElement("table");
   const width = document.getElementById("width").value;
   const height = document.getElementById("height").value;
-
-  const table = document.createElement("table");
   table.style.width = width * CELL_PIXEL_AMOUNT + "px";
   table.style.height = height * CELL_PIXEL_AMOUNT + "px";
   table.id = "grid";
-
-  table.addEventListener("click", (event) => {
-    x = Math.floor(((event.clientX - table.getBoundingClientRect().left) / CELL_PIXEL_AMOUNT));
-    y = Math.floor(((event.clientY - table.getBoundingClientRect().top) / CELL_PIXEL_AMOUNT));
-
-    cell = document.getElementById("grid").rows[y].cells[x];
-    if (cell.id == "alive") {
-      cell.id = "";
-    } else {
-      cell.id = "alive";
-    }
-  });
 
   for (let i = 0; i < height; i++) {
     const tr = document.createElement("tr");
@@ -126,9 +93,30 @@ function createGridTable() {
 
     for (let j = 0; j < width; j++) {
       const td = document.createElement("td");
+      td.id = "";
       tr.appendChild(td);
     }
   }
 
   document.getElementById("body").appendChild(table);
+
+  addClickListener(table);
+}
+
+function addClickListener(table) {
+  table.addEventListener("click", (event) => {
+    x = Math.floor(((event.clientX - table.getBoundingClientRect().left) / CELL_PIXEL_AMOUNT));
+    y = Math.floor(((event.clientY - table.getBoundingClientRect().top) / CELL_PIXEL_AMOUNT));
+
+    cell = document.getElementById("grid").rows[y].cells[x];
+    inverseCellState(cell)
+  });
+}
+
+function inverseCellState(cell) {
+  if (cell.id === "alive") {
+    cell.id = "";
+  } else {
+    cell.id = "alive";
+  }
 }
