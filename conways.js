@@ -1,20 +1,37 @@
 const CELL_PIXEL_AMOUNT = 24;
 
+const UPDATE_SPEED = 250;
+
+const ALIVE = "1";
+const DEAD = "0";
+
 let playing = false;
 let updateIntervalId = 0;
 
 let generationNum = 0;
 
-function start() {
+window.onload = function() {
+  createGrid();
+};
+
+function startButton() {
   if (!playing) {
-    playing = true;
-    document.getElementById("startStop").innerText = "Stop";
-    updateIntervalId = setInterval(update, 250);
+    start();
   } else {
-    playing = false;
-    document.getElementById("startStop").innerText = "Start";
-    clearInterval(updateIntervalId);
+    stop();
   }
+}
+
+function start() {
+  playing = true;
+  document.getElementById("startStop").innerText = "Stop";
+  updateIntervalId = setInterval(update, UPDATE_SPEED);
+}
+
+function stop() {
+  playing = false;
+  document.getElementById("startStop").innerText = "Start";
+  clearInterval(updateIntervalId);
 }
 
 function update() {
@@ -52,9 +69,9 @@ function updateCellState(x, y, numAliveNeighbours) {
   const cell = document.getElementById("grid").rows[x].cells[y];
 
   if (cell.id === "alive" && (numAliveNeighbours < 2 || numAliveNeighbours > 3)) {
-    cell.id = "";
+    inverseCellState(cell);
   } else if (cell.id === "" && numAliveNeighbours === 3) {
-    cell.id = "alive";
+    inverseCellState(cell);
   }
 }
 
@@ -105,6 +122,8 @@ function createGrid() {
 
 function addClickListener(table) {
   table.addEventListener("click", (event) => {
+    if (playing) startButton();
+
     x = Math.floor(((event.clientX - table.getBoundingClientRect().left) / CELL_PIXEL_AMOUNT));
     y = Math.floor(((event.clientY - table.getBoundingClientRect().top) / CELL_PIXEL_AMOUNT));
 
